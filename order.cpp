@@ -13,6 +13,11 @@ order::order(int customerID, int orderID) : dropOff(), pickUp(3), _laundry(),  _
     _discountApplied = false;
     _discount = 0.00;
     _discountedCost = 0.00;
+
+    _taxable = false;
+    _tax = 0.00;
+    _finalTotal = 0.00;
+
     _deposit = 0.00;
     _voidOrder = false;
 }
@@ -25,6 +30,7 @@ order::order(const Params& params) :
     _dryClean(params.dryClean),
     _alterations(params.alterations),
     _total(params.total),
+    _finalTotal(params.finalTotal),
     _rackNumber(params.rack),
     _pickedUp(params.pickedUp),
     _paid(params.paid),
@@ -32,9 +38,18 @@ order::order(const Params& params) :
     _discountApplied(params.discountApplied),
     _discount(params.discount),
     _discountedCost(params.discountedCost),
+
+    _taxable(params.taxable),
+    _tax(params.tax),
+
     _deposit(params.deposit),
     _voidOrder(params.voidOrder)
 {
+
+    if(params.orderID != -1) //set -1 to a #defined
+        _orderID = params.orderID;
+    else
+        _orderID = std::nullopt;
 }
 
 
@@ -74,14 +89,15 @@ float order::applyDiscount(){
 }
 
 void order::voidOrder(){
-    _voidOrder = true;
+    _orderID = std::nullopt;
+    _customerID = -1;
+
     _laundry.voidOrder();
     _dryClean.voidOrder();
     _alterations.voidOrder();
 
-    _customerID = -1;
     _total = -1;
-    _rackNumber = -1;
+    _rackNumber = 0;
     _paid = false;
     _pieceTotal = -1;
 
@@ -89,4 +105,25 @@ void order::voidOrder(){
     _discount = -1;
     _discountedCost = -1;
     _deposit = -1;
+}
+
+float order::calculateFinalTotal(){
+
+    float tempTotal;
+
+    if(_discountApplied)
+        _finalTotal = _total - (_total * (_discount/100.0));
+    else
+        _finalTotal = _total;
+
+    tempTotal = _finalTotal;
+
+    if(_taxable){
+        set_calculateTax();
+        _finalTotal = tempTotal + _tax;
+    }
+    else
+        _finalTotal = tempTotal;
+
+    return _finalTotal;
 }

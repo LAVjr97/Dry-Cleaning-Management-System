@@ -5,12 +5,14 @@
 #include "date.h"
 #include "pieces.h"
 #include "service.h"
+#include <optional>
+
 
 namespace orderInfo{
     class order{
         public:
             struct Params{
-                int orderID;
+                std::optional<int> orderID;
                 int customerID;
 
                 services::serviceOrder laundry;
@@ -25,6 +27,11 @@ namespace orderInfo{
                 bool discountApplied;
                 float discount;
                 float discountedCost;
+
+                bool taxable;
+                float tax;
+                float finalTotal;
+
                 float deposit;
                 bool voidOrder;
 
@@ -37,18 +44,20 @@ namespace orderInfo{
             //Order created in drop off page
             order(int customerID, int orderID);
 
+            order(std::optional<int> orderID); //creating a null order
+
 
             //Loads orders at the start of program
             order(const Params& params);
 
-            order(int orderID, int customerID, float cost, int rack, bool pickedUp, bool paid, int pieceTotal, bool discountApplied, float discount, float discountedCost, float deposit, int dropOffDay, int dropOffMonth, int dropOffYear, int dropOffHour, int dropOffMin, std::string dropOffAm_Pm, int pickUpDay, int pickUpMonth, int pickUpYear, int pickUpHour, int pickUpMin, std::string pickUpAm_Pm, std::vector<std::vector<std::tuple<std::string, int, float>>> laundry, std::vector<std::vector<std::tuple<std::string, int, float>>> dryClean, std::vector<std::vector<std::tuple<std::string, int, float>>> alterations);
-            order(int orderID, int customerID, float cost, int rack, bool pickedUp, bool paid, int pieceTotal, bool discountApplied, float discount, float discountedCost, float deposit, int dropOffDay, int dropOffMonth, int dropOffYear, int dropOffHour, int dropOffMin, std::string dropOffAm_Pm, int pickUpDay, int pickUpMonth, int pickUpYear, int pickUpHour, int pickUpMin, std::string pickUpAm_Pm, std::vector<std::vector<std::tuple<std::string, std::string, int, float>>> laundry, std::vector<std::vector<std::tuple<std::string, std::string, int, float>>> dryClean, std::vector<std::vector<std::tuple<std::string, std::string, int, float>>> alterations);
+            order(int orderID, int customerID, float cost, int rack, bool pickedUp, bool paid, int pieceTotal, bool discountApplied, float discount, float discountedCost, bool taxable, float tax, float deposit, int dropOffDay, int dropOffMonth, int dropOffYear, int dropOffHour, int dropOffMin, std::string dropOffAm_Pm, int pickUpDay, int pickUpMonth, int pickUpYear, int pickUpHour, int pickUpMin, std::string pickUpAm_Pm, std::vector<std::vector<std::tuple<std::string, int, float>>> laundry, std::vector<std::vector<std::tuple<std::string, int, float>>> dryClean, std::vector<std::vector<std::tuple<std::string, int, float>>> alterations);
+            order(int orderID, int customerID, float cost, int rack, bool pickedUp, bool paid, int pieceTotal, bool discountApplied, float discount, float discountedCost, bool taxable, float tax, float deposit, int dropOffDay, int dropOffMonth, int dropOffYear, int dropOffHour, int dropOffMin, std::string dropOffAm_Pm, int pickUpDay, int pickUpMonth, int pickUpYear, int pickUpHour, int pickUpMin, std::string pickUpAm_Pm, std::vector<std::vector<std::tuple<std::string, std::string, int, float>>> laundry, std::vector<std::vector<std::tuple<std::string, std::string, int, float>>> dryClean, std::vector<std::vector<std::tuple<std::string, std::string, int, float>>> alterations);
 
             //~order();
 
             //Get functions, set to const to insure that data isn't being changed
             int getCustomerID() const {return _customerID;}
-            int getOrderID() const {return _orderID;}
+            std::optional<int> getOrderID() const {return _orderID;}
 
             services::serviceOrder getLaundry() const {return _laundry;}
             services::serviceOrder getDryClean() const {return _dryClean;}
@@ -62,8 +71,9 @@ namespace orderInfo{
             bool getDiscountApplied() const {return _discountApplied;}
             float getDiscount() const {return _discount;}
             float getDiscountedCost() {return applyDiscount();}
+            bool getTaxable() const {return _taxable;}
+            float getTax() const {return _tax;}
             float getDeposit() const {return _deposit;}
-            bool getVoidOrder() const {return _voidOrder;}
 
             //Set functions
             int setCustomerID(int id);
@@ -85,14 +95,18 @@ namespace orderInfo{
             void setDiscountApplied(bool applied) {_discountApplied = applied;}
             void setDiscount(float disc) {_discount = disc;}
             void setDiscountedCost(float discountedCost) {_discountedCost = discountedCost;}
+            void setTaxable(bool taxable) {_taxable = taxable;}
+            void setTax(bool tax) {_tax = tax;}
             void setDeposit(float deposit) {_deposit = deposit;}
-            void setVoidOrder(bool voidOrder) {_voidOrder = voidOrder;}
 
             //Helper functions
-            float calculateSubTotal();
-            int calculatePieceTotal();
+            float calculateSubTotal(); //Add tax information to this
+            int calculatePieceTotal(); //Add tax information to this
             float applyDiscount();
             bool verifyOrderIDs();
+            float calculateFinalTotal();
+            void set_calculateTax(){if(_taxable) _tax = (_total * .09375);}
+            void taxReset();
             void voidOrder();
 
             //order& operator=(const order& other);
@@ -103,13 +117,14 @@ namespace orderInfo{
 
         private:
             int _customerID;
-            int _orderID;
+            std::optional<int> _orderID;
 
             services::serviceOrder _laundry;
             services::serviceOrder _dryClean;
             services::serviceOrder _alterations;
 
-            float _total;
+            float _total; //Cost
+            float _finalTotal;
             int _rackNumber;
             bool _pickedUp;
             bool _paid;
@@ -117,11 +132,13 @@ namespace orderInfo{
 
             bool _discountApplied;
             float _discount;
+
             float _discountedCost;
 
-            float _deposit;
+            bool _taxable;
+            float _tax;
 
-            bool _voidOrder;
+            float _deposit;
     };
 }
 

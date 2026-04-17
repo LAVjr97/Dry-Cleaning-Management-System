@@ -60,7 +60,7 @@ namespace services
             //Helper functions
             float calculateTotalPrice(void);
             int addPiece(std::string typeName, int typeID, pieces::piece piece, int pieceCount);
-            void voidOrder() {_typeList = {}; _name.clear();}
+            void voidOrder() {_typeList.clear(); _typeList.resize(1); _name.clear();}
             int calculatePieceTotal(void);
 
         private:
